@@ -1,0 +1,4 @@
+__pycache__
+venv
+py2fa.egg-info/
+dist/
