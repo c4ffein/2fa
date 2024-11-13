@@ -187,7 +187,7 @@ def read_keychain(file: str) -> Keychain:
 
 def hotp(key: bytes, counter: int, digits: int) -> int:
     digest = new_hmac(key, counter.to_bytes(8, "big"), sha1).digest()
-    v = int.from_bytes(digest[digest[len(digest) - 1] & 0x0F :][:4], "big", signed=False) & 0x7FFFFFFF
+    v = int.from_bytes(digest[digest[-1] & 0x0F :][:4], "big", signed=False) & 0x7FFFFFFF
     return v % pow(10, min(digits, 8))
 
 
