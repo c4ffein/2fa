@@ -22,8 +22,7 @@ COUNTER_LEN = 20
 
 
 def clip(s: str):
-    commands = {"Darwin": "pbcopy", "Linux": "wl-copy"}
-    command = commands.get(PLATFORM)
+    command = {"Darwin": "pbcopy", "Linux": "wl-copy"}.get(PLATFORM)
     if command is None:
         raise NotImplementedError(f"Clipboard not available for platform {PLATFORM}")
     try:
