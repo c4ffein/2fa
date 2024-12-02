@@ -208,6 +208,8 @@ def main():
     if keyname is not None and any(c not in ascii_letters + digits + "-/=" for c in keyname):
         raise TwoFAException("name must only be composed of [A-Z][a-z][0-9]-/=")
     k = read_keychain(Path.home() / ".2fa")
+    if keyname is None and not k.keys:
+        usage()
     if keyname is None:
         (usage if flags_count > 1 else k.list if flags_values["list"] else usage if flags_count == 1 else k.show_all)()
     elif flags_count == 0:
