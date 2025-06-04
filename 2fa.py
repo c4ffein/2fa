@@ -8,6 +8,7 @@ Interoperable with github.com/rsc/2fa but fully reimplemented in pure Python
 
 from base64 import b32decode
 from datetime import datetime
+from enum import Enum
 from hashlib import sha1
 from hmac import new as new_hmac
 from pathlib import Path
@@ -19,6 +20,9 @@ from typing import Dict, Optional
 
 PLATFORM = platform_system()
 COUNTER_LEN = 20
+
+colors = {"RED": "31", "GREEN": "32", "PURP": "34", "DIM": "90", "WHITE": "39"}
+Color = Enum("Color", [(k, f"\033[{v}m") for k, v in colors.items()])
 
 
 def clip(s: str):
@@ -223,4 +227,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        exit(main())
+    except KeyboardInterrupt:
+        print("\n  !!  KeyboardInterrupt received  !!  \n")
+        exit(-2)
+    except TwoFAException as e:
+        print(f"{Color.RED.value}\n  !!  {e}  !!  \n{Color.WHITE.value}")
+        exit(-1)
+    except Exception:
+        raise
