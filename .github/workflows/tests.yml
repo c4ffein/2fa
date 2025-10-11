@@ -1,4 +1,4 @@
-name: CI
+name: Tests
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         make lint-check
 
   test:
-    name: Test Python ${{ matrix.python-version }}
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
