@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "py2fa"
 version = "0.0.1"
@@ -12,6 +16,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[project.scripts]
+2fa = "twofa:main"
 
 [project.urls]
 Homepage = "https://github.com/c4ffein/2fa"

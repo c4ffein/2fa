@@ -5,7 +5,7 @@ KISS Python 2fa cli
 ## WARNING
 **I don't recommand using this as-is.** This a PoC, usable by me because I know what I want to do with it.
 - You can use it if you feel that you can edit the code yourself and you can live with my future breaking changes.
-- **Probably doesn't work for now with Windows paths**
+- Currently no Windows compatibility
 
 ## Help
 ```
