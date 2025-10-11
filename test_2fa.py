@@ -425,5 +425,29 @@ class TestEdgeCases:
             assert code.isdigit()
 
 
+class TestDocumentation:
+    def test_usage_in_readme(self):
+        """Verify that usage block in code matches README"""
+        from twofa import usage_block
+        # Read README
+        readme_path = Path(__file__).parent / "README.md"
+        readme_content = readme_path.read_text()
+        # Extract content between ``` marks in the ## Help section
+        # Find the help section
+        help_section_start = readme_content.find("## Help")
+        assert help_section_start != -1, "README should have a '## Help' section"
+        # Find the code block after ## Help
+        code_block_start = readme_content.find("```", help_section_start)
+        assert code_block_start != -1, "README should have a code block after ## Help"
+        code_block_end = readme_content.find("```", code_block_start + 3)
+        assert code_block_end != -1, "README code block should be closed"
+        # Extract the content between the ```
+        readme_usage = readme_content[code_block_start + 3 : code_block_end].strip()
+        # Compare with usage_block from code
+        assert usage_block.strip() == readme_usage, (
+            f"Usage block in code should match README.\nExpected:\n{usage_block.strip()}\n\nGot:\n{readme_usage}"
+        )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
