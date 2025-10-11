@@ -429,6 +429,7 @@ class TestDocumentation:
     def test_usage_in_readme(self):
         """Verify that usage block in code matches README"""
         from twofa import usage_block
+
         # Read README
         readme_path = Path(__file__).parent / "README.md"
         readme_content = readme_path.read_text()
