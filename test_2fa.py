@@ -5,6 +5,7 @@ Test suite for 2fa.py
 """
 
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -127,8 +128,9 @@ class TestKey:
 
 class TestKeychain:
     def test_keychain_initialization(self):
-        kc = Keychain("/tmp/test")
-        assert kc.file == "/tmp/test"
+        test_file = str(Path(tempfile.gettempdir()) / "test")
+        kc = Keychain(test_file)
+        assert kc.file == test_file
         assert kc.data == b""
         assert kc.keys == {}
 
@@ -235,7 +237,8 @@ class TestKeychain:
             assert code1 != code2
 
     def test_keychain_code_nonexistent_key(self):
-        kc = Keychain("/tmp/test")
+        test_file = str(Path(tempfile.gettempdir()) / "test")
+        kc = Keychain(test_file)
         with pytest.raises(TwoFAException, match="no such key"):
             kc.code("nonexistent")
 
@@ -291,7 +294,8 @@ class TestReadKeychain:
             assert kc.keys == {}
 
     def test_read_nonexistent_keychain(self):
-        kc = read_keychain("/tmp/nonexistent_keychain_file")
+        test_file = str(Path(tempfile.gettempdir()) / "nonexistent_keychain_file")
+        kc = read_keychain(test_file)
         assert kc.keys == {}
 
     def test_read_valid_keychain(self):

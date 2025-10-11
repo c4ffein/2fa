@@ -26,11 +26,11 @@ Color = Enum("Color", [(k, f"\033[{v}m") for k, v in colors.items()])
 
 
 def clip(s: str):
-    command = {"Darwin": "pbcopy", "Linux": "wl-copy"}.get(PLATFORM)
+    command = {"Darwin": "pbcopy", "Linux": "wl-copy", "Windows": "clip"}.get(PLATFORM)
     if command is None:
         raise NotImplementedError(f"Clipboard not available for platform {PLATFORM}")
     try:
-        subprocess_run(command, text=True, input=s)
+        subprocess_run(command, text=True, input=s, check=True)
     except FileNotFoundError:
         raise NotImplementedError(f"Clipboard command {command} not found for platform {PLATFORM}") from None
 
@@ -100,7 +100,15 @@ class Keychain:
             raise TwoFAException(f"invalid key: {e}") from e
         try:
             Path(self.file).touch(0o600)
-            Path(self.file).chmod(0o600)  # in case file already exists with wrong rights
+            # Set restrictive permissions (Unix only)
+            if PLATFORM == "Windows":
+                print(
+                    f"{Color.DIM.value}Warning: File permissions not set on Windows. "
+                    f"Ensure {self.file} is stored securely.{Color.WHITE.value}",
+                    file=stderr,
+                )
+            else:
+                Path(self.file).chmod(0o600)
             with Path(self.file).open("a") as f:
                 try:
                     f.write(f"{name} {size} {key}" + (f" {'0' * 20}" if hotp_mode else "") + "\n")
