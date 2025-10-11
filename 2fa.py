@@ -120,7 +120,7 @@ class Keychain:
                 n = int(self.data[k.offset : k.offset + COUNTER_LEN]) + 1
             except Exception as e:
                 raise TwoFAException(
-                    f"malformed key counter for {name} {self.data[k.offset:k.offset+COUNTER_LEN]}"
+                    f"malformed key counter for {name} {self.data[k.offset : k.offset + COUNTER_LEN]}"
                 ) from e
             code_value = hotp(k.raw, n, k.digits)
             try:
@@ -199,7 +199,7 @@ def totp(key: bytes, t: datetime, digits: int):
 
 
 def main():
-    flags_values = {k: False for k in ["add", "list", "hotp", "7", "8", "clip"]}
+    flags_values = dict.fromkeys(["add", "list", "hotp", "7", "8", "clip"], False)
     for flag in (n for n in argv[1:] if n.startswith("-")):
         if flag[1:] not in flags_values:
             usage()  # TODO : raise TwoFAException(f"unknown option: {flag}") and catch globally as separate, handle it

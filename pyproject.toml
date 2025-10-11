@@ -20,6 +20,8 @@ Issues = "https://github.com/c4ffein/2fa"
 [project.optional-dependencies]
 dev = [
     "ruff==0.5.1",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
 ]
 
 [tool.ruff]

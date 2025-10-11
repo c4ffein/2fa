@@ -2,3 +2,9 @@ __pycache__
 venv
 py2fa.egg-info/
 dist/
+build/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
