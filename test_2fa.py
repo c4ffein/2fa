@@ -450,5 +450,44 @@ class TestDocumentation:
         )
 
 
+class TestMain:
+    def test_unknown_option_raises_exception(self):
+        """Test that unknown options raise TwoFAException"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "-unknown"]):
+            with pytest.raises(TwoFAException, match="unknown option: -unknown"):
+                main()
+
+    def test_multiple_unknown_options(self):
+        """Test that first unknown option is caught"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "-foo", "-bar"]):
+            with pytest.raises(TwoFAException, match="unknown option: -foo"):
+                main()
+
+    def test_valid_options_dont_raise(self):
+        """Test that valid options are accepted"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test_key 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                # -list is a valid option
+                with patch("twofa.argv", ["2fa", "-list"]):
+                    with patch("sys.stdout"):
+                        main()  # Should not raise
+
+    def test_unknown_option_with_keyname(self):
+        """Test unknown option combined with keyname"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "-invalid", "github"]):
+            with pytest.raises(TwoFAException, match="unknown option: -invalid"):
+                main()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

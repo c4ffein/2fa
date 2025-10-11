@@ -213,7 +213,7 @@ def main():
     flags_values = dict.fromkeys(["add", "list", "hotp", "7", "8", "clip"], False)
     for flag in (n for n in argv[1:] if n.startswith("-")):
         if flag[1:] not in flags_values:
-            usage()  # TODO : raise TwoFAException(f"unknown option: {flag}") and catch globally as separate, handle it
+            raise TwoFAException(f"unknown option: {flag}")
         flags_values[flag[1:]] = True
     flags_count = sum(1 for v in flags_values.values() if v)
     args = [n for n in argv[1:] if not n.startswith("-")]
