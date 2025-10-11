@@ -57,9 +57,6 @@ usage_block = """
 With no arguments, 2fa show codes for all time-based keys
 TOTP auth codes are derived from a hash of the key and the current time
 One-minute accuracy from the system clock is expected
-───────────────────
-WARNING: The HOTP mechanism should be improved by editing a copy of the .2fa file
-         The current implementation is similar to the original one from rsc/2fa but should be improved
 """
 
 
@@ -98,9 +95,12 @@ class Keychain:
             decode_key(key)
         except Exception as e:
             raise TwoFAException(f"invalid key: {e}") from e
-        try:
-            Path(self.file).touch(0o600)
-            # Set restrictive permissions (Unix only)
+        try:  # atomic write: write to temp file, then rename
+            new_entry = f"{name} {size} {key}" + (f" {'0' * 20}" if hotp_mode else "") + "\n"
+            keychain_path = Path(self.file)
+            temp_file = keychain_path.with_suffix(".tmp")
+            existing_content = keychain_path.read_bytes() if keychain_path.exists() else b""
+            temp_file.write_bytes(existing_content + new_entry.encode())
             if PLATFORM == "Windows":
                 print(
                     f"{Color.DIM.value}Warning: File permissions not set on Windows. "
@@ -108,16 +108,12 @@ class Keychain:
                     file=stderr,
                 )
             else:
-                Path(self.file).chmod(0o600)
-            with Path(self.file).open("a") as f:
-                try:
-                    f.write(f"{name} {size} {key}" + (f" {'0' * 20}" if hotp_mode else "") + "\n")
-                except Exception as e:
-                    raise TwoFAException(f"adding key: {e}") from e
-        except TwoFAException as e:
-            raise e
+                temp_file.chmod(0o600)
+            temp_file.replace(keychain_path)
         except Exception as e:
-            raise TwoFAException(f"opening keychain: {e}") from e
+            if temp_file.exists():
+                temp_file.unlink()
+            raise TwoFAException(f"adding key: {e}") from e
 
     def code(self, name: str) -> str:
         k = self.keys.get(name)
@@ -131,17 +127,18 @@ class Keychain:
                     f"malformed key counter for {name} {self.data[k.offset : k.offset + COUNTER_LEN]}"
                 ) from e
             code_value = hotp(k.raw, n, k.digits)
-            try:
-                with Path(self.file).open("r+b") as f:
-                    try:
-                        f.seek(k.offset)
-                        f.write(str(n).zfill(COUNTER_LEN).encode("ascii"))
-                    except Exception as e:
-                        raise TwoFAException(f"updating keychain: {e}") from e
-            except TwoFAException as e:
-                raise e
+            try:  # atomic update: write to temp file, then rename
+                updated_data = bytearray(self.data)
+                counter_bytes = str(n).zfill(COUNTER_LEN).encode("ascii")
+                updated_data[k.offset : k.offset + COUNTER_LEN] = counter_bytes
+                temp_file = Path(self.file).with_suffix(".tmp")
+                temp_file.write_bytes(bytes(updated_data))
+                temp_file.replace(Path(self.file))
+                self.data = bytes(updated_data)
             except Exception as e:
-                raise TwoFAException(f"opening/writing keychain: {e}") from e
+                if temp_file.exists():
+                    temp_file.unlink()
+                raise TwoFAException(f"updating keychain: {e}") from e
         else:
             code_value = totp(k.raw, datetime.now(), k.digits)  # Time-based key.
         return str(code_value).zfill(k.digits)

@@ -26,7 +26,4 @@ KISS Python 2fa cli
 With no arguments, 2fa show codes for all time-based keys
 TOTP auth codes are derived from a hash of the key and the current time
 One-minute accuracy from the system clock is expected
-───────────────────
-WARNING: The HOTP mechanism should be improved by editing a copy of the .2fa file
-         The current implementation is similar to the original one from rsc/2fa but should be improved
 ```
