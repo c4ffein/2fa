@@ -11,6 +11,7 @@ from datetime import datetime
 from enum import Enum
 from hashlib import sha1
 from hmac import new as new_hmac
+from os import getenv
 from pathlib import Path
 from platform import system as platform_system
 from string import ascii_letters, digits
@@ -20,6 +21,10 @@ from typing import Dict, Optional
 
 PLATFORM = platform_system()
 COUNTER_LEN = 20
+
+# Allow custom secrets location via environment variable
+# Example: export CONFIG_2FA_SECRETS=.config/2fa/secrets
+CONFIG_2FA_SECRETS = Path.home() / getenv("CONFIG_2FA_SECRETS", ".2fa")
 
 colors = {"RED": "31", "GREEN": "32", "PURP": "34", "DIM": "90", "WHITE": "39"}
 Color = Enum("Color", [(k, f"\033[{v}m") for k, v in colors.items()])
@@ -43,6 +48,7 @@ usage_block = """
 2fa - 2 factor auth
 ───────────────────
 ~/.2fa => will contain the unencrypted secrets, compatible with https://github.com/rsc/2fa
+~/$CONFIG_2FA_SECRETS => alternative secrets location, if set
 ───────────────────
 - 2fa -add [-7] [-8] [-hotp] keyname  ==> add a key to the keychain, reads key from input
 - 2fa -list                           ==> list keys without showing all generated OTPs
@@ -216,7 +222,7 @@ def main():
     keyname = args[0] if len(args) == 1 else None
     if keyname is not None and any(c not in ascii_letters + digits + "-/=" for c in keyname):
         raise TwoFAException("name must only be composed of [A-Z][a-z][0-9]-/=")
-    k = read_keychain(Path.home() / ".2fa")
+    k = read_keychain(CONFIG_2FA_SECRETS)
     if keyname is None and not k.keys:
         usage()
     if keyname is None:

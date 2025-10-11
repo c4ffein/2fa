@@ -12,6 +12,7 @@ KISS Python 2fa cli
 2fa - 2 factor auth
 ───────────────────
 ~/.2fa => will contain the unencrypted secrets, compatible with https://github.com/rsc/2fa
+~/$CONFIG_2FA_SECRETS => alternative secrets location, if set
 ───────────────────
 - 2fa -add [-7] [-8] [-hotp] keyname  ==> add a key to the keychain, reads key from input
 - 2fa -list                           ==> list keys without showing all generated OTPs
