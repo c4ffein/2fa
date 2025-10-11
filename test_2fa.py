@@ -488,6 +488,106 @@ class TestMain:
             with pytest.raises(TwoFAException, match="unknown option: -invalid"):
                 main()
 
+    def test_too_many_arguments(self):
+        """Test error when providing multiple key names"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "github", "aws", "google"]):
+            with pytest.raises(TwoFAException, match="too many arguments: expected 0 or 1, got 3"):
+                main()
+
+    def test_invalid_key_name_characters(self):
+        """Test error for invalid characters in key name"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "git@hub"]):
+            with pytest.raises(TwoFAException, match="invalid key name 'git@hub'"):
+                main()
+
+    def test_no_keys_in_keychain(self):
+        """Test error when keychain is empty"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.touch()  # Empty file
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa"]):
+                    with pytest.raises(TwoFAException, match="no keys found"):
+                        main()
+
+    def test_multiple_flags_without_keyname(self):
+        """Test error when combining flags without a key name"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa", "-add", "-hotp"]):
+                    with pytest.raises(TwoFAException, match="cannot combine multiple flags without a key name"):
+                        main()
+
+    def test_single_flag_without_keyname_not_list(self):
+        """Test error when using a single flag (not -list) without key name"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa", "-add"]):
+                    with pytest.raises(TwoFAException, match="cannot use flags without a key name"):
+                        main()
+
+    def test_clip_with_multiple_flags(self):
+        """Test error when combining -clip with other flags"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa", "-clip", "-7", "test"]):
+                    with pytest.raises(TwoFAException, match="cannot combine -clip with other flags"):
+                        main()
+
+    def test_invalid_flag_combination(self):
+        """Test error for invalid flag combinations"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa", "-hotp", "test"]):
+                    with pytest.raises(TwoFAException, match="invalid flag combination"):
+                        main()
+
+    def test_show_all_success(self):
+        """Test successful show_all operation"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa"]):
+                    with patch("sys.stdout"):
+                        main()  # Should not raise
+
+    def test_show_specific_key_success(self):
+        """Test successful show operation for a specific key"""
+        from twofa import main
+
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            with patch("twofa.CONFIG_2FA_SECRETS", filepath):
+                with patch("twofa.argv", ["2fa", "test"]):
+                    with patch("sys.stdout"):
+                        main()  # Should not raise
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

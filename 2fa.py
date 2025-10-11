@@ -209,7 +209,7 @@ def totp(key: bytes, t: datetime, digits: int):
     return hotp(key, int(t.timestamp()) // 30, digits)
 
 
-def main():
+def main():  # noqa: C901
     flags_values = dict.fromkeys(["add", "list", "hotp", "7", "8", "clip"], False)
     for flag in (n for n in argv[1:] if n.startswith("-")):
         if flag[1:] not in flags_values:
@@ -218,21 +218,30 @@ def main():
     flags_count = sum(1 for v in flags_values.values() if v)
     args = [n for n in argv[1:] if not n.startswith("-")]
     if len(args) > 1:
-        usage()
+        raise TwoFAException(f"too many arguments: expected 0 or 1, got {len(args)}")
     keyname = args[0] if len(args) == 1 else None
     if keyname is not None and any(c not in ascii_letters + digits + "-/=" for c in keyname):
-        raise TwoFAException("name must only be composed of [A-Z][a-z][0-9]-/=")
+        raise TwoFAException(f"invalid key name '{keyname}': must only contain [A-Z][a-z][0-9]-/=")
     k = read_keychain(CONFIG_2FA_SECRETS)
     if keyname is None and not k.keys:
-        usage()
+        raise TwoFAException(f"no keys found in {CONFIG_2FA_SECRETS}")
     if keyname is None:
-        (usage if flags_count > 1 else k.list if flags_values["list"] else usage if flags_count == 1 else k.show_all)()
+        if flags_count > 1:
+            raise TwoFAException("cannot combine multiple flags without a key name")
+        elif flags_values["list"]:
+            k.list()
+        elif flags_count == 1:
+            raise TwoFAException("cannot use flags without a key name (except -list)")
+        else:
+            k.show_all()
     elif flags_count == 0:
         k.show(keyname)
     elif flags_values["clip"]:
-        (usage if flags_count != 1 else lambda: k.show(keyname, do_clip=True))()
+        if flags_count != 1:
+            raise TwoFAException("cannot combine -clip with other flags")
+        k.show(keyname, do_clip=True)
     elif not flags_values["add"]:
-        usage()
+        raise TwoFAException("invalid flag combination: use -add or -clip with a key name")
     else:
         k.add(keyname, digits_7=flags_values["7"], digits_8=flags_values["8"], hotp_mode=flags_values["hotp"])
 
