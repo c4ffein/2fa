@@ -710,43 +710,43 @@ class TestUsageDisplay:
 
 
 class TestHelpFlag:
-    """Test that help flags display usage and exit"""
+    """Test that help flags display usage and exit with code 0"""
 
     def test_help_flag(self):
-        """Test that -help flag displays usage"""
+        """Test that -help flag displays usage and exits with 0"""
         from twofa import main
 
         with patch("twofa.argv", ["2fa", "-help"]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
-            assert exc_info.value.code == -2
+            assert exc_info.value.code == 0
 
     def test_double_dash_help_flag(self):
-        """Test that --help flag displays usage"""
+        """Test that --help flag displays usage and exits with 0"""
         from twofa import main
 
         with patch("twofa.argv", ["2fa", "--help"]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
-            assert exc_info.value.code == -2
+            assert exc_info.value.code == 0
 
     def test_h_flag(self):
-        """Test that -h flag displays usage"""
+        """Test that -h flag displays usage and exits with 0"""
         from twofa import main
 
         with patch("twofa.argv", ["2fa", "-h"]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
-            assert exc_info.value.code == -2
+            assert exc_info.value.code == 0
 
     def test_help_with_other_args(self):
-        """Test that help flag works even with other arguments"""
+        """Test that help flag works even with other arguments and exits with 0"""
         from twofa import main
 
         with patch("twofa.argv", ["2fa", "-h", "keyname"]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
-            assert exc_info.value.code == -2
+            assert exc_info.value.code == 0
 
 
 if __name__ == "__main__":

@@ -53,11 +53,13 @@ usage_block = """
 - 2fa -add [-7] [-8] [-hotp] keyname  ==> add a key to the keychain, reads key from input
 - 2fa -list                           ==> list keys without showing all generated OTPs
 - 2fa [-clip] keyname                 ==> show a specific key with its generated OTP
+- 2fa -help                           ==> show this help message
 ───────────────────
 [-hotp] setup the key to generate counter-based (HOTP) instead of time-based (TOTP) auth codes
 [-7]    setup the key to generate 7-digits instead of 6-digits auth codes
 [-8]    setup the key to generate 8-digits instead of 6-digits auth codes
 [-clip] also copies the code to the system clipboard
+[-help] show this help message (also -h or --help)
 ───────────────────
 2fa keys are case-insensitive [A-Z][2-7]
 With no arguments, 2fa show codes for all time-based keys
@@ -66,9 +68,9 @@ One-minute accuracy from the system clock is expected
 """
 
 
-def usage():
+def usage(exit_code=-2):
     print(usage_block, file=stderr)
-    exit(-2)
+    exit(exit_code)
 
 
 def decode_key(key: str) -> bytes:
@@ -212,7 +214,8 @@ def totp(key: bytes, t: datetime, digits: int):
 def main():  # noqa: C901
     # Check for help flag first
     if any(arg in ["-help", "--help", "-h"] for arg in argv[1:]):
-        usage()
+        usage(exit_code=0)
+
     flags_values = dict.fromkeys(["add", "list", "hotp", "7", "8", "clip"], False)
     for flag in (n for n in argv[1:] if n.startswith("-")):
         if flag[1:] not in flags_values:
