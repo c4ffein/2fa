@@ -709,5 +709,45 @@ class TestUsageDisplay:
             assert should_show_usage is False
 
 
+class TestHelpFlag:
+    """Test that help flags display usage and exit"""
+
+    def test_help_flag(self):
+        """Test that -help flag displays usage"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "-help"]):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+            assert exc_info.value.code == -2
+
+    def test_double_dash_help_flag(self):
+        """Test that --help flag displays usage"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "--help"]):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+            assert exc_info.value.code == -2
+
+    def test_h_flag(self):
+        """Test that -h flag displays usage"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "-h"]):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+            assert exc_info.value.code == -2
+
+    def test_help_with_other_args(self):
+        """Test that help flag works even with other arguments"""
+        from twofa import main
+
+        with patch("twofa.argv", ["2fa", "-h", "keyname"]):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+            assert exc_info.value.code == -2
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

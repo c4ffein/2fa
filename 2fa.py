@@ -210,6 +210,9 @@ def totp(key: bytes, t: datetime, digits: int):
 
 
 def main():  # noqa: C901
+    # Check for help flag first
+    if any(arg in ["-help", "--help", "-h"] for arg in argv[1:]):
+        usage()
     flags_values = dict.fromkeys(["add", "list", "hotp", "7", "8", "clip"], False)
     for flag in (n for n in argv[1:] if n.startswith("-")):
         if flag[1:] not in flags_values:
