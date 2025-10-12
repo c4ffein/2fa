@@ -253,7 +253,21 @@ if __name__ == "__main__":
         print("\n  !!  KeyboardInterrupt received  !!  \n")
         exit(-2)
     except TwoFAException as e:
-        print(f"{Color.RED.value}\n  !!  {e}  !!  \n{Color.WHITE.value}")
+        print(f"{Color.RED.value}\n  !!  {e}  !!  \n{Color.WHITE.value}", file=stderr)
+        # Show usage for certain errors to help users
+        if any(
+            phrase in str(e)
+            for phrase in [
+                "unknown option",
+                "too many arguments",
+                "invalid key name",
+                "cannot combine",
+                "cannot use flags",
+                "invalid flag combination",
+            ]
+        ):
+            print(file=stderr)  # Empty line before usage
+            usage()
         exit(-1)
     except Exception:
         raise

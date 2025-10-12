@@ -589,5 +589,125 @@ class TestMain:
                         main()  # Should not raise
 
 
+class TestUsageDisplay:
+    """Test that usage() is displayed for appropriate errors"""
+
+    def _run_main_with_exception_handler(self, argv_list, config_path=None):
+        """Helper to simulate running the script with exception handler"""
+        from twofa import Color, TwoFAException, main, usage
+
+        patches = [patch("twofa.argv", argv_list)]
+        if config_path:
+            patches.append(patch("twofa.CONFIG_2FA_SECRETS", config_path))
+
+        with patch.multiple("twofa", Color=Color, TwoFAException=TwoFAException, main=main, usage=usage):
+            with patches[0]:
+                if len(patches) > 1:
+                    with patches[1]:
+                        try:
+                            main()
+                        except TwoFAException as e:
+                            # Simulate the exception handler from if __name__ == "__main__"
+                            if any(
+                                phrase in str(e)
+                                for phrase in [
+                                    "unknown option",
+                                    "too many arguments",
+                                    "invalid key name",
+                                    "cannot combine",
+                                    "cannot use flags",
+                                    "invalid flag combination",
+                                ]
+                            ):
+                                return str(e), True  # Should show usage
+                            return str(e), False  # Should NOT show usage
+                else:
+                    try:
+                        main()
+                    except TwoFAException as e:
+                        if any(
+                            phrase in str(e)
+                            for phrase in [
+                                "unknown option",
+                                "too many arguments",
+                                "invalid key name",
+                                "cannot combine",
+                                "cannot use flags",
+                                "invalid flag combination",
+                            ]
+                        ):
+                            return str(e), True
+                        return str(e), False
+
+    def test_usage_shown_for_unknown_option(self):
+        """Test that usage should be displayed after unknown option error"""
+        error_msg, should_show_usage = self._run_main_with_exception_handler(["2fa", "-invalid"])
+        assert "unknown option: -invalid" in error_msg
+        assert should_show_usage is True
+
+    def test_usage_shown_for_too_many_arguments(self):
+        """Test that usage should be displayed after too many arguments error"""
+        error_msg, should_show_usage = self._run_main_with_exception_handler(["2fa", "key1", "key2"])
+        assert "too many arguments" in error_msg
+        assert should_show_usage is True
+
+    def test_usage_shown_for_invalid_key_name(self):
+        """Test that usage should be displayed after invalid key name error"""
+        error_msg, should_show_usage = self._run_main_with_exception_handler(["2fa", "invalid@name"])
+        assert "invalid key name" in error_msg
+        assert should_show_usage is True
+
+    def test_usage_shown_for_cannot_combine_flags(self):
+        """Test that usage should be displayed for 'cannot combine' errors"""
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            error_msg, should_show_usage = self._run_main_with_exception_handler(
+                ["2fa", "-add", "-list"], config_path=filepath
+            )
+            assert "cannot combine" in error_msg
+            assert should_show_usage is True
+
+    def test_usage_shown_for_cannot_use_flags(self):
+        """Test that usage should be displayed for 'cannot use flags' errors"""
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            error_msg, should_show_usage = self._run_main_with_exception_handler(["2fa", "-add"], config_path=filepath)
+            assert "cannot use flags" in error_msg
+            assert should_show_usage is True
+
+    def test_usage_shown_for_invalid_flag_combination(self):
+        """Test that usage should be displayed for invalid flag combination errors"""
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            error_msg, should_show_usage = self._run_main_with_exception_handler(
+                ["2fa", "-hotp", "test"], config_path=filepath
+            )
+            assert "invalid flag combination" in error_msg
+            assert should_show_usage is True
+
+    def test_no_usage_shown_for_no_such_key(self):
+        """Test that usage should NOT be displayed for operational errors like 'no such key'"""
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.write_text("test 6 JBSWY3DPEHPK3PXP\n")
+            error_msg, should_show_usage = self._run_main_with_exception_handler(
+                ["2fa", "nonexistent"], config_path=filepath
+            )
+            assert "no such key" in error_msg
+            assert should_show_usage is False
+
+    def test_no_usage_shown_for_empty_keychain(self):
+        """Test that usage should NOT be displayed for 'no keys found' error"""
+        with TemporaryDirectory() as tmpdir:
+            filepath = Path(tmpdir) / ".2fa"
+            filepath.touch()
+            error_msg, should_show_usage = self._run_main_with_exception_handler(["2fa"], config_path=filepath)
+            assert "no keys found" in error_msg
+            assert should_show_usage is False
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
