@@ -445,9 +445,9 @@ class TestDocumentation:
         # Extract the content between the ```
         readme_usage = readme_content[code_block_start + 3 : code_block_end].strip()
         # Compare with usage_block from code
-        assert usage_block.strip() == readme_usage, (
-            f"Usage block in code should match README.\nExpected:\n{usage_block.strip()}\n\nGot:\n{readme_usage}"
-        )
+        assert (
+            usage_block.strip() == readme_usage
+        ), f"Usage block in code should match README.\nExpected:\n{usage_block.strip()}\n\nGot:\n{readme_usage}"
 
 
 class TestMain:

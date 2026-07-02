@@ -1,4 +1,4 @@
-.PHONY: help lint lint-check test test-verbose test-coverage clean install-dev install-build-system build-package install-package-uploader upload-package-test upload-package ci
+.PHONY: help lint lint-check test test-verbose test-coverage clean install-dev install-build-system build-package install-package-uploader upload-package-test upload-package verify
 
 help:
 	@echo "Available targets:"
@@ -9,16 +9,16 @@ help:
 	@echo "  make test-coverage     - Run test suite with coverage report"
 	@echo "  make clean             - Clean build artifacts and cache"
 	@echo "  make install-dev       - Install development dependencies"
-	@echo "  make ci                - Run CI checks (lint-check + test-coverage)"
+	@echo "  make verify            - Run all checks (lint-check + test-coverage)"
 	@echo "  make build-package     - Build distribution package"
 	@echo "  make upload-package-test - Upload to TestPyPI"
 	@echo "  make upload-package    - Upload to PyPI"
 
 lint:
-	ruff check --fix; ruff format
+	uvx ruff@0.5.1 check --fix; uvx ruff@0.5.1 format
 
 lint-check:
-	ruff check --no-fix && ruff format --check
+	uvx ruff@0.5.1 check --no-fix && uvx ruff@0.5.1 format --check
 
 test:
 	python3 -m pytest test_2fa.py
@@ -52,5 +52,5 @@ upload-package-test:
 upload-package:
 	python3 -m twine upload --verbose dist/*
 
-ci: lint-check test-coverage
-	@echo "CI checks passed!"
+verify: lint-check test-coverage
+	@echo "All checks passed!"

@@ -17,7 +17,6 @@ from platform import system as platform_system
 from string import ascii_letters, digits
 from subprocess import run as subprocess_run
 from sys import argv, stderr
-from typing import Dict, Optional
 
 PLATFORM = platform_system()
 COUNTER_LEN = 20
@@ -83,7 +82,7 @@ class Key:
 
 
 class Keychain:
-    def __init__(self, file: str, data=b"", keys: Optional[Dict[str, Key]] = None):
+    def __init__(self, file: str, data=b"", keys: dict[str, Key] | None = None):
         self.file, self.data, self.keys = file, data, {} if keys is None else keys
 
     def list(self):
